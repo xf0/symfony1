@@ -3,7 +3,7 @@
 /*
  * This file is part of the symfony package.
  * (c) Fabien Potencier <fabien.potencier@symfony-project.com>
- * 
+ *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
@@ -114,7 +114,7 @@ class sfClassManipulator
     $code = '';
     $insideSetup = -1;
     $parens = 0;
-    foreach (token_get_all($this->code) as $token)
+    foreach ($this->getTokens($this->code) as $token)
     {
       if (isset($token[1]))
       {
@@ -171,7 +171,7 @@ class sfClassManipulator
 
   /**
    * Filters each line of the given method through a callable.
-   * 
+   *
    * @param string $method   The method name
    * @param mixed  $callable A PHP callable that accepts and returns one line of PHP code
    */
@@ -183,7 +183,7 @@ class sfClassManipulator
     $parens = 0;
     $break = false;
 
-    $tokens = token_get_all($this->code);
+    $tokens = $this->getTokens($this->code);
     for ($i = 0; $i < count($tokens); $i++)
     {
       $token = $tokens[$i];
@@ -263,16 +263,7 @@ class sfClassManipulator
 
     if ($line)
     {
-      if (false === stripos($line, '<?php'))
-      {
-        // add a function so we can accurately slice
-        $tokens = token_get_all('<?php function'.$line);
-        $tokens = array_slice($tokens, 2);
-      }
-      else
-      {
-        $tokens = token_get_all($line);
-      }
+      $tokens = $this->getTokens($line);
 
       // we're in reverse
       $inSignature = false;
@@ -300,7 +291,23 @@ class sfClassManipulator
     return array($before, $setup);
   }
 
-  /**
+    /**
+     * @param $code
+     * @return array
+     */
+    protected function getTokens($code) {
+        if (false === stripos($code, '<?php')) {
+            // add a function so we can accurately slice
+            $tokens = token_get_all('<?php ' . $code);
+            $tokens = array_slice($tokens, 2);
+            return $tokens;
+        } else {
+            $tokens = token_get_all($code);
+            return $tokens;
+        }
+    }
+
+    /**
    * Returns a token's string value.
    *
    * @param array|string $token
